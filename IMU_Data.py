@@ -31,10 +31,12 @@ class IMU_Data(threading.Thread):
     self.connected = self.connectIMU()
     self.s.sendto(b'r',(self.host, self.port))# send a char to IMU server
     if self.filename:
-      self.f = open(self.filename,'w')
+      self.f = open(self.filename,'wb')
     while not self.stopped and self.connected:
-      data, addr = self.s.recvfrom(1024)
-      self.ParseIMUData(data)
+      #data, addr = self.s.recvfrom(1024)
+      nbytes, add = self.s.recvfrom_into(data)
+      print(nbytes)
+      #self.ParseIMUData(data)
       if self.filename:
         t = time.time()
         #t = time.clock()#only for windows

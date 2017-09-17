@@ -3,10 +3,10 @@ import time
 import threading
 class KDM_JG200m(threading.Thread):
 
-  def __init__(self, filename=None, com='com3', com_rate=19200, cout=False):
+  def __init__(self, com='com3', com_rate=19200, cout=False):
     threading.Thread.__init__(self)
     self.cout = cout # true for console output
-    self.filename = filename
+    self.filename = None
     self.com = com
     self.com_rate = com_rate
     self.buf = []
@@ -14,8 +14,15 @@ class KDM_JG200m(threading.Thread):
     self.t0 = None # start receive time
     self.stopped = False
     self.distance = 0
-    if cout:
-      print('KDM_JG200m object is created.')
+    print('KDM_JG200m object is created.')
+
+  def StartRecording(self, str_t):
+    self.filename = str_t + "_Distance.csv"
+    self.buf = []
+
+
+  def StopRecording(self):
+    self.filename = None
 
   def SerialStart(self):
     try:
@@ -30,11 +37,11 @@ class KDM_JG200m(threading.Thread):
   def run(self):
     if self.cout:
       print('KDM_JG200m thread is running.')
-    com_OK = self.SerialStart()
+    self.com_OK = self.SerialStart()
     self.t0 = time.time() 
     i = 0
     
-    while com_OK and not self.stopped:
+    while self.com_OK and not self.stopped:
       n = self.ser.in_waiting
       if n>8:
         rev = self.ser.read(n)
@@ -47,27 +54,30 @@ class KDM_JG200m(threading.Thread):
           print(n,rev[index],rev[index-2],rev[index-1])
 
   def stop(self): 
+    self.SaveDistanceFile()
     self.stopped = True   
-    if self.cout:
-      print('KDM_JG200m thread is closing.')
+    print('KDM_JG200m thread is closing.')
     try:
       self.ser.close()
+      print('close serial port:{}'.format(self.com))
     except:
-      pass
-    self.SaveDistanceFile()
+      print('fail to close serial port:{}'.format(self.com))
+      pass    
    
   def isStopped(self):
     return self.stopped  
 
   def SaveDistanceFile(self):
+    if self.filename:
+      print('save KDM_JG200m data to{}'.format(self.filename))
+    else:
+      return    
+
     if len(self.buf) == 0:
       if self.cout:
         print("No distance message")
       return
-    if self.filename:
-      print('save KDM_JG200m data to{}'.format(self.filename))
-    else:
-      return
+
 
     index = [i for i,x in enumerate(self.buf) if x == 255]
     frame_num = len(index)
@@ -84,6 +94,7 @@ class KDM_JG200m(threading.Thread):
             s = '{i},{d},{t}\n'.format(i=i,d=distance, t=frame_t)
             f.write(s)    
     f.close()
+    self.filename = None
 
 
 
