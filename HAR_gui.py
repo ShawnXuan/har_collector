@@ -15,20 +15,29 @@ class Application(Frame):
         t = time.localtime()
         str_t = time.strftime("%Y%m%d_%H%M%S", t)
 
-        self.dis_thread = KDM_JG200m(cout=False)
-        self.dis_thread.filename = str_t + "_Distance.csv"
-        self.dis_thread.start()
+        #self.dis_thread = KDM_JG200m(cout=False)
+        #self.dis_thread.filename = str_t + "_Distance.csv"
+        #self.dis_thread.start()
+        
+        self.imu_thread = IMU_Data(cout=False)
+        self.imu_thread.str_t = str_t
+        self.imu_thread.start()
         print("Start recording on !",str_t)
 
     def stop(self):
-        self.dis_thread.stop()
-        self.dis_thread.join()
+        #self.dis_thread.stop()
+        #self.dis_thread.join()
+        self.imu_thread.stop()
+        self.imu_thread.join()
         print("Stop recording!")
 
     def abort(self):
-        self.dis_thread.filename = None
-        self.dis_thread.stop()
-        self.dis_thread.join()        
+        #self.dis_thread.filename = None
+        #self.dis_thread.stop()
+        #self.dis_thread.join()        
+        self.imu_thread.filename = None
+        self.imu_thread.stop()
+        self.imu_thread.join()        
         print("Abort recording!")
 
     def createWidgets(self):

@@ -4,11 +4,18 @@ import threading
 import struct
 from math import asin, atan2, pi
 
+def del_file(p):
+  """Delete a file."""
+  if path.isfile(p):
+    os.remove(p)
+    print('F : %s' % p)
+
 class IMU_Data(threading.Thread):
-  def __init__(self, filename=None, host='192.168.1.2', port=4210, cout=False):
+  def __init__(self, host='192.168.1.2', port=4210, cout=False):
     threading.Thread.__init__(self)
     self.cout = cout # true for console output
-    self.filename = filename
+    self.filename = None
+    self.str_t = None
     self.host = host
     self.port = port
     self.stopped = False
@@ -28,14 +35,24 @@ class IMU_Data(threading.Thread):
       return False      
 
   def run(self):
-    self.connected = self.connectIMU()
-    self.s.sendto(b'r',(self.host, self.port))# send a char to IMU server
-    if self.filename:
-      self.f = open(self.filename,'wb')
+    if self.str_t == None:
+      return
+
+    if not self.connected: 
+      self.connected = self.connectIMU()
+    if not self.connected:
+      return
+
+    cmd = "Start:"+self.str_t
+    cmd = bytes(cmd, encoding = "utf8")  
+    self.s.sendto(cmd,(self.host, self.port))# send a char to IMU server
+    self.filename = self.str_t+"_imu.csv"
+
+    self.f = open(self.filename,'w')
     while not self.stopped and self.connected:
-      #data, addr = self.s.recvfrom(1024)
-      nbytes, add = self.s.recvfrom_into(data)
-      print(nbytes)
+      data, addr = self.s.recvfrom(1024)
+      #nbytes, add = self.s.recvfrom_into(data)
+      print(data)
       #self.ParseIMUData(data)
       if self.filename:
         t = time.time()
@@ -45,6 +62,7 @@ class IMU_Data(threading.Thread):
 
       if self.cout:
         print(data)
+
   def ParseIMUData(self, data):
     s = str(data, encoding = "utf-8").split(',')
     self.imu_data = [struct.unpack('<f', bytes.fromhex(h))[0] for h in s[:-1]]
@@ -72,10 +90,30 @@ class IMU_Data(threading.Thread):
     return yaw, pitch, roll
 
   def stop(self): 
+    print("stop", self.str_t)
+    if self.str_t:
+      if self.connected:
+        cmd = "Stop:"+self.str_t
+        cmd = bytes(cmd, encoding = "utf8") 
+        self.s.sendto(cmd,(self.host, self.port))# send a char to IMU server
+      self.f.close()
+      self.str_t = None
+    else:
+      if self.connected:
+        cmd = "Abort:"+self.str_t
+        cmd = bytes(cmd, encoding = "utf8") 
+        self.s.sendto(cmd,(self.host, self.port))# send a char to IMU server
+      print(self.filename)
+      if self.filename:
+        self.f.close()
+        del_file(self.filename)    
     self.stopped = True
+    self.str_t = None
+
 
   def isStopped(self):
-    if self.filename:
-      self.f.close()
+    print("isStopped", self.str_t)
+    self.filename = None  
+    self.str_t = None
     return self.stopped 
 

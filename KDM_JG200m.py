@@ -16,14 +16,6 @@ class KDM_JG200m(threading.Thread):
     self.distance = 0
     print('KDM_JG200m object is created.')
 
-  def StartRecording(self, str_t):
-    self.filename = str_t + "_Distance.csv"
-    self.buf = []
-
-
-  def StopRecording(self):
-    self.filename = None
-
   def SerialStart(self):
     try:
       self.ser = serial.Serial(self.com, self.com_rate)#, timeout=0)
