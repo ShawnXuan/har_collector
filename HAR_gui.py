@@ -27,6 +27,7 @@ class Application(Frame):
     def stop(self):
         #self.dis_thread.stop()
         #self.dis_thread.join()
+        self.imu_thread.delete_file = False
         self.imu_thread.stop()
         self.imu_thread.join()
         print("Stop recording!")
@@ -35,7 +36,7 @@ class Application(Frame):
         #self.dis_thread.filename = None
         #self.dis_thread.stop()
         #self.dis_thread.join()        
-        self.imu_thread.filename = None
+        self.imu_thread.delete_file = True
         self.imu_thread.stop()
         self.imu_thread.join()        
         print("Abort recording!")
@@ -56,9 +57,10 @@ class Application(Frame):
         self.btnAbort["command"] =  self.abort
         self.btnAbort.grid(row=1, column=2)
 
-    def __init__(self, master=None, dis_thread=None):
+    def __init__(self, master=None):
         Frame.__init__(self, master)
-        self.dis_thread = dis_thread
+        self.dis_thread = None
+        self.imu_thread = None
         self.pack()
         self.createWidgets()
 
