@@ -15,7 +15,7 @@ class Application(Frame):
         t = time.localtime()
         str_t = time.strftime("%Y%m%d_%H%M%S", t)
 
-        self.dis_thread = KDM_JG200m(cout=False)
+        self.dis_thread = KDM_JG200m(cout=True)
         self.dis_thread.filename = str_t + "_Distance.csv"
         self.dis_thread.start()
         

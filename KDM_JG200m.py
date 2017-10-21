@@ -43,7 +43,7 @@ class KDM_JG200m(threading.Thread):
         index = [i for i,x in enumerate(rev) if x == 255][-1]
         self.distance = rev[index-2]*100+rev[index-1]
         if self.cout:
-          print(n,rev[index],rev[index-2],rev[index-1])
+          print(self.distance<2900, n,rev[index],rev[index-2],rev[index-1])
 
   def stop(self): 
     self.SaveDistanceFile()
@@ -79,12 +79,19 @@ class KDM_JG200m(threading.Thread):
     f = open(self.filename,'w')
     f.write('index, distance, time\n')
     delta_t = (self.t-self.t0)/frame_num
+    frame_num = 0
+    lost_num = 0
     for i,x in enumerate(index):
         if x>1:#如果第一帧不全就不处理了
             frame_t = self.t0 + i*delta_t
             distance = self.buf[x-2]*100+self.buf[x-1]
+            if distance > 2900:
+              lost_num = lost_num + 1
+            frame_num = frame_num + 1
             s = '{i},{d},{t}\n'.format(i=i,d=distance, t=frame_t)
-            f.write(s)    
+            f.write(s)  
+    if self.cout:
+      print("total num: {}, lost_num: {}".format(frame_num, lost_num))  
     f.close()
     self.filename = None
 

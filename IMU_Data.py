@@ -48,9 +48,9 @@ class IMU_Data(threading.Thread):
     cmd = "Start:"+self.str_t
     cmd = bytes(cmd, encoding = "utf8")  
     self.s.sendto(cmd,(self.host, self.port))# send a char to IMU server
-    self.filename = self.str_t+"_imu.csv"
+    self.filename = self.str_t+"_imu.bin"
 
-    self.f = open(self.filename,'w')
+    self.f = open(self.filename,'wb')
     while self.connected:
       try:
         data, addr = self.s.recvfrom(1024)
@@ -63,9 +63,13 @@ class IMU_Data(threading.Thread):
       #self.ParseIMUData(data)
       if self.filename:
         t = time.time()
+        bt = struct.pack('d', t)
         #t = time.clock()#only for windows
-        s = '{t},{d}\n'.format(t=t, d=data)
-        self.f.write(s)
+        
+        self.f.write(bt)
+        self.f.write(data)
+        # unpack use
+        # struct.unpack("d2i20f", data)
 
       if self.cout:
         print(data)
