@@ -77,7 +77,7 @@ class KDM_JG200m(threading.Thread):
       frame_num += 1
 
     f = open(self.filename,'w')
-    f.write('index, distance, time\n')
+    f.write('index,distance,time\n')
     delta_t = (self.t-self.t0)/frame_num
     frame_num = 0
     lost_num = 0
